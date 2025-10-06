@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: route-order
+              uri: http://localhost:63729
+              predicates:
+                - Path=/api/v1/gateway/orders/**
+                - Method=GET
+                - Header=X-Consumer, enyoi
+                - Header=Authorization, Bearer (.*)
+              filters:
+                - RewritePath=/api/v1/gateway/orders, /api/v1/orders
+                #StripPrefix=1
+                #- RewritePath=/api/v1/gateway/orders/(?<segment>.*), /api/v1/orders/${segment}
+            - id: route-auth
+              uri: http://localhost:8097
+              predicates:
+                - Path=/api/v1/gateway/auth/**
+                - Method=POST
+              filters:
+                - RewritePath=/api/v1/gateway/auth, /api/v1/auth
+
+            - id: route-test
+              uri: http://localhost:8097
+              predicates:
+                - Path=/api/v1/gateway/test/**
+                - Method=GET
+              filters:
+                - RewritePath=/api/v1/gateway/test, /api/v1
+
+
+
+
+    discovery:
+      locator:
+        enabled: true
+        lower-case-service-id: true
+
+
+logging:
+  level:
+    org.springframework.cloud: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.gateway.route.RouteDefinitionLocator: DEBUG
+
+jwt:
+  secret-key: ${JWT_SECRET}
+  expiration: 3600000
+
+server:
+  port: 8093
